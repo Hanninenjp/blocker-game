@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Blocker Game</title>
+
+    <!-- MDL -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.blue_grey-blue.min.css" />
+    <script defer src="https://code.getmdl.io/1.3.0/material.min.js"></script>
+
+    <!-- Blocker game -->
+    <script type="text/javascript" charset="utf-8" src="bg-app.js"></script>
+
+</head>
+<body>
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header mdl-color--grey-100">
+
+    <!-- Header -->
+
+    <header class="mdl-layout__header mdl-color--grey-800">
+        <div class="mdl-layout__header-row">
+            <!-- Title -->
+            <span class="mdl-layout-title">Ekoodi Blocker Game</span>
+        </div>
+    </header>
+    <div class="mdl-layout__drawer">
+        <span class="mdl-layout-title">In GitHub</span>
+        <nav class="mdl-navigation">
+            <a class="mdl-navigation__link" href="https://github.com/Hanninenjp/blocker-game" target="_blank">blocker-game</a>
+        </nav>
+    </div>
+
+    <br>
+
+    <!-- Content -->
+
+    <main class="mdl-layout__content">
+
+
+        <div class="page-content">
+
+            <!-- Blocker game -->
+            <canvas id="bg-canvas" width="480" height="270" style="border:1px solid black; margin: 20px;"></canvas>
+
+        </div>
+
+    </main>
+
+    <br>
+
+    <!-- Footer -->
+
+    <footer class="mdl-mini-footer">
+        <div class="mdl-mini-footer__left-section">
+            <div class="mdl-logo">&copy; Copyright 2017 Jukka Hänninen</div>
+        </div>
+    </footer>
+
+</div>
+</body>
+</html>
