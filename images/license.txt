@@ -1,0 +1,35 @@
+License information for game assets
+-----------------------------------
+
+Background image
+----------------
+
+File:
+beach-background.png
+Source:
+http://opengameart.org/content/flappy-dragon-sprite-sheets
+Retrieved:
+30.3.2017:
+License:
+Creative Commons CC0 1.0 Universal (CC0 1.0), Public Domain
+https://creativecommons.org/publicdomain/zero/1.0/
+Author:
+http://bevouliin.com/
+
+Character images
+----------------
+
+Files:
+c-frame-1.png
+c-frame-2.png
+c-frame-3.png
+c-frame-4.png
+Source:
+http://opengameart.org/content/bevouliin-free-beach-game-background-for-game-developers
+Retrieved:
+30.3.2017
+License:
+Creative Commons CC0 1.0 Universal (CC0 1.0), Public Domain
+https://creativecommons.org/publicdomain/zero/1.0/
+Author:
+http://bevouliin.com/

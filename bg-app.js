@@ -2,16 +2,18 @@
  * Created by ekoodi on 29.3.2017.
  */
 
-//var blockerGameApp = (function(){
-
     window.addEventListener("load", startGame);
 
-    var gameBlock;
+    var gameCharacter;
+    var gameBackground;
     var gameObstacles = [];
+    var gameScore;
 
     function startGame() {
         myGameArea.start();
-        gameBlock = new component(30, 30, "blue", 10, 120);
+        gameCharacter = new characterImageComponent(34, 30, "./images/c-frame-1.png", 5, 120);
+        gameBackground = new backgroundImageComponent(540, 270, "./images/beach-background.png");
+        gameScore = new component("30px", "Consolas", "black", 280, 40, "text");
     }
 
     var myGameArea = {
@@ -21,10 +23,11 @@
             this.frameCount = 0;
             this.interval = setInterval(updateGameArea, 20);
             window.addEventListener('keydown', function(e){
-                myGameArea.key = e.keyCode;
+                myGameArea.keys = (myGameArea.keys || []);
+                myGameArea.keys[e.keyCode] = (e.type === "keydown");
             });
             window.addEventListener('keyup', function(e){
-                myGameArea.key = false;
+                myGameArea.keys[e.keyCode] = (e.type === "keydown");
             });
         },
         clear : function() {
@@ -42,26 +45,74 @@
         return false;
     }
 
-
-
-    function component(width, height, color, x, y){
+    function component(width, height, color, x, y, type){
+        this.type = type;
         this.width = width;
         this.height = height;
         this.speedX = 0;
         this.speedY = 0;
         this.x = x;
         this.y = y;
-        var ctx = myGameArea.context;
-        ctx.fillStyle = color;
-        ctx.fillRect(this.x, this.y, this.width, this.height);
         this.update = function() {
-            ctx = myGameArea.context;
-            ctx.fillStyle = color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            var ctx = myGameArea.context;
+            if (this.type === "text"){
+                ctx.font = this.width + " " + this.height;
+                ctx.fillStyle = color;
+                ctx.fillText(this.text, this.x, this.y);
+            }
+            else{
+                ctx.fillStyle = color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
         };
         this.newPos = function(){
             this.x += this.speedX;
             this.y += this.speedY;
+        };
+    }
+
+    function backgroundImageComponent(width, height, source){
+        this.width = width;
+        this.height = height;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.x = 0;
+        this.y = 0;
+        this.image = new Image();
+        this.image.src = source;
+        this.update = function(){
+            var ctx = myGameArea.context;
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+            ctx.drawImage(this.image, this.x + this.width, this.y, this.width, this.height);
+        };
+        this.newPos = function(){
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if(this.x === -(this.width)){
+                this.x = 0;
+            }
+        };
+    }
+
+    function characterImageComponent(width, height, source, x, y){
+        this.width = width;
+        this.height = height;
+        this.speedX = 0;
+        this.speedY = 0;
+        this.x = x;
+        this.y = y;
+        this.image = new Image();
+        this.image.src = source;
+        this.update = function(){
+            var ctx = myGameArea.context;
+            ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+        };
+        this.newPos = function(){
+            this.x += this.speedX;
+            this.y += this.speedY;
+            if(this.x < 0){
+                this.x = 0;
+            }
         };
         this.collideWith = function(gameObject){
             var myleft = this.x;
@@ -84,48 +135,43 @@
     }
 
     function updateGameArea() {
-        var x, y;
+
+        var x, height, gap, minHeight, maxHeight, minGap, maxGap;
         for (var i = 0; i < gameObstacles.length; i += 1) {
-            if (gameBlock.collideWith(gameObstacles[i])) {
+            if (gameCharacter.collideWith(gameObstacles[i])) {
                 myGameArea.stop();
                 return;
             }
         }
         myGameArea.clear();
         myGameArea.frameCount += 1;
+        gameBackground.speedX = -1;
+        gameBackground.newPos();
+        gameBackground.update();
         if (myGameArea.frameCount === 1 || everyInterval(150)) {
             x = myGameArea.canvas.width;
-            y = myGameArea.canvas.height - 200;
-            gameObstacles.push(new component(10, 200, "green", x, y));
+            minHeight = 20;
+            maxHeight = 135;
+            height = Math.floor(Math.random()*(maxHeight-minHeight+1)+minHeight);
+            minGap = 50;
+            maxGap = 80;
+            gap = Math.floor(Math.random()*(maxGap-minGap+1)+minGap);
+            gameObstacles.push(new component(10, height, "green", x, 0));
+            gameObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
         }
         for (i = 0; i < gameObstacles.length; i += 1) {
             gameObstacles[i].x += -1;
             gameObstacles[i].update();
         }
-        gameBlock.speedY = 0;
-        gameBlock.speedX = 0;
-        if (myGameArea.key && myGameArea.key == 37) {gameBlock.speedX = -1; }
-        if (myGameArea.key && myGameArea.key == 39) {gameBlock.speedX = 1; }
-        if (myGameArea.key && myGameArea.key == 38) {gameBlock.speedY = -1; }
-        if (myGameArea.key && myGameArea.key == 40) {gameBlock.speedY = 1; }
-        //gameBlock.x += 1;
-        gameBlock.newPos();
-        gameBlock.update();
+        gameScore.text = "SCORE: " + myGameArea.frameCount;
+        gameScore.update();
+        gameCharacter.speedY = 0;
+        gameCharacter.speedX = 0;
+        if (myGameArea.keys && myGameArea.keys[37]) {gameCharacter.speedX = -1; }
+        if (myGameArea.keys && myGameArea.keys[39]) {gameCharacter.speedX = 1; }
+        if (myGameArea.keys && myGameArea.keys[38]) {gameCharacter.speedY = -1; }
+        if (myGameArea.keys && myGameArea.keys[40]) {gameCharacter.speedY = 1; }
+        gameCharacter.newPos();
+        gameCharacter.update();
+
     }
-
-    function moveUp(){
-        gameBlock.speedY -= 1;
-    }
-
-    function moveDown(){
-        gameBlock.speedX += 1;
-    }
-
-    function stopMove() {
-        gameBlock.speedX = 0;
-        gameBlock.speedY = 0;
-    }
-
-//    return{};
-
-//})();
