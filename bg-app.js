@@ -6,14 +6,14 @@ window.addEventListener("load", startGame);
 
 var gameCharacter;
 var gameBackground;
-var obstacleGroup;
+var gameObstacles;
 var gameScore;
 
 function startGame() {
     gameArea.start();
     gameCharacter = new CharacterComponent(34, 30, "./images/c-frame-?.png", 4, 5, 120, gameArea.context);
     gameBackground = new BackgroundComponent(540, 270, "./images/beach-background.png", gameArea.context);
-    obstacleGroup = new ObstacleGroup();
+    gameObstacles = new ObstacleGroup();
     gameScore = new TextComponent("30px", "Consolas", "black", gameArea.context, 280, 30);
 }
 
@@ -41,7 +41,7 @@ var gameArea = {
 
 function updateGameArea() {
 
-    if(obstacleGroup.isCollision(gameCharacter)){
+    if(gameObstacles.isCollision(gameCharacter)){
         gameArea.stop();
         return;
     }
@@ -52,10 +52,11 @@ function updateGameArea() {
     gameBackground.update();
     //Obstacles
     if (gameArea.frameCount === 1 || (gameArea.frameCount % 150) === 0) {
-        obstacleGroup.addGate(20, gameArea.canvas.height, "green", gameArea.context, gameArea.canvas.width, 0);
+        //gameObstacles.addBlockGate(20, gameArea.canvas.height, "green", gameArea.context, gameArea.canvas.width, 0);
+        gameObstacles.addTileGate(gameArea.canvas.width, gameArea.canvas.height, "./images/b-tile.png", gameArea.context, gameArea.canvas.width, 0);
     }
-    obstacleGroup.moveObstacles(-1, 0);
-    obstacleGroup.updateObstacles();
+    gameObstacles.moveObstacles(-1, 0);
+    gameObstacles.updateObstacles();
     //Score
     gameScore.update("SCORE: " + gameArea.frameCount);
     //Character
@@ -79,8 +80,11 @@ function updateGameArea() {
 
 function ObstacleGroup(){
     this.obstacles = [];
-    this.addGate = function(width, height, color, ctx, x, y){
-        this.obstacles.push(new ObstacleGate(width, height, color, ctx, x, y));
+    this.addBlockGate = function(width, height, color, ctx, x, y){
+        this.obstacles.push(new ObstacleBlockGate(width, height, color, ctx, x, y));
+    };
+    this.addTileGate = function(width, height, source, ctx, x, y){
+        this.obstacles.push(new ObstacleTileGate(width, height, source, ctx, x, y));
     };
     this.moveObstacles = function(speedX, speedY){
         for(var i = 0; i < this.obstacles.length; i++){
@@ -101,10 +105,10 @@ function ObstacleGroup(){
             }
         }
         return false;
-    }
+    };
 }
 
-function ObstacleGate(width, height, color, ctx, x, y){
+function ObstacleBlockGate(width, height, color, ctx, x, y){
 
     this.components = [];
     this.ctx = ctx;
@@ -119,8 +123,8 @@ function ObstacleGate(width, height, color, ctx, x, y){
     var minHeight = Math.floor(minGap / 2);
     var maxHeight = this.height - minHeight - gateGap;
     var gateHeight = Math.floor(Math.random() * (maxHeight - minHeight + 1) + minHeight);
-    this.components.push(new ObstacleComponent(this.width, gateHeight, this.color, this.ctx, this.x, this.y));
-    this.components.push(new ObstacleComponent(this.width, this.height - gateHeight - gateGap, this.color, this.ctx, this.x, gateHeight + gateGap));
+    this.components.push(new ObstacleBlockComponent(this.width, gateHeight, this.color, this.ctx, this.x, this.y));
+    this.components.push(new ObstacleBlockComponent(this.width, this.height - gateHeight - gateGap, this.color, this.ctx, this.x, gateHeight + gateGap));
     this.move = function(speedX, speedY){
         this.x += speedX;
         this.y += speedY;
@@ -146,9 +150,10 @@ function ObstacleGate(width, height, color, ctx, x, y){
     };
 }
 
-function ObstacleComponent(width, height, color, ctx, x, y){
+function ObstacleBlockComponent(width, height, color, ctx, x, y){
     this.width = width;
     this.height = height;
+    this.color = color;
     this.ctx = ctx;
     this.x = x;
     this.y = y;
@@ -161,8 +166,92 @@ function ObstacleComponent(width, height, color, ctx, x, y){
         return true;
     };
     this.update = function (){
-        this.ctx.fillStyle = color;
+        this.ctx.fillStyle = this.color;
         this.ctx.fillRect(this.x, this.y, this.width, this.height);
+    };
+    this.isCollision = function(gameObject){
+        var componentLeft = this.x;
+        var componentRight = this.x + this.width;
+        var componentTop = this.y;
+        var componentBottom = this.y + this.height;
+        var objectLeft = gameObject.x;
+        var objectRight = gameObject.x + gameObject.width;
+        var objectTop = gameObject.y;
+        var objectBottom = gameObject.y + gameObject.height;
+        if((objectBottom < componentTop ||
+            objectLeft > componentRight ||
+            objectTop > componentBottom ||
+            objectRight < componentLeft )){
+            return false;
+        }
+        return true;
+    };
+}
+
+function ObstacleTileGate(width, height, source, ctx, x, y){
+    this.components = [];
+    this.width = width;
+    this.height = height;
+    this.source = source;
+    this.ctx = ctx;
+    this.x = x;
+    this.y = y;
+    this.image = new Image();
+    this.image.src = this.source;
+    var tileCount = 9;
+    var tileWidth = this.height / tileCount;
+    var tileHeight = this.height / tileCount;
+    var gap = 2;
+    var minTiles = 1;
+    var maxTiles = 6;
+    var topTiles = Math.floor(Math.random()*(maxTiles-minTiles+1)+minTiles);
+    var bottomTiles = tileCount - gap - topTiles;
+    for(var i = 0; i < topTiles; i++){
+        this.components.push(new ObstacleTileComponent(tileWidth, tileHeight, this.image, this.ctx, this.x, this.y + i * tileHeight));
+    }
+    for(i = 0; i < bottomTiles; i++){
+        this.components.push(new ObstacleTileComponent(tileWidth, tileHeight, this.image, this.ctx, this.x, this.y + (topTiles+gap) * tileHeight + i * tileHeight));
+    }
+    this.move = function(speedX){
+        this.x += speedX;
+        for(var i = 0; i < this.components.length; i++){
+            if(!this.components[i].move(speedX)){
+                return false;
+            }
+        }
+        return true;
+    };
+    this.update = function(){
+        for(var i = 0; i < this.components.length; i++){
+            this.components[i].update();
+        }
+    };
+    this.isCollision = function(gameObject){
+        for(var i = 0; i < this.components.length; i++){
+            if(this.components[i].isCollision(gameObject)){
+                return true;
+            }
+        }
+        return false;
+    };
+}
+
+function ObstacleTileComponent(width, height, image, ctx, x, y){
+    this.width = width;
+    this.height = height;
+    this.image = image;
+    this.ctx = ctx;
+    this.x = x;
+    this.y = y;
+    this.move = function(speedX){
+        this.x += speedX;
+        if(this.x === -(this.width)){
+            return false;
+        }
+        return true;
+    };
+    this.update = function(){
+        this.ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
     };
     this.isCollision = function(gameObject){
         var componentLeft = this.x;
