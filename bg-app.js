@@ -8,6 +8,7 @@ var gameCharacter;
 var gameBackground;
 var gameObstacles;
 var gameScore;
+var gameController;
 
 function startGame() {
     gameArea.start();
@@ -15,6 +16,8 @@ function startGame() {
     gameBackground = new BackgroundComponent(540, 270, "./images/beach-background.png", gameArea.context);
     gameObstacles = new ObstacleGroup();
     gameScore = new TextComponent("30px", "Consolas", "black", gameArea.context, 280, 30);
+    gameController = new KeyboardController(gameCharacter);
+    gameController.start();
 }
 
 var gameArea = {
@@ -23,13 +26,6 @@ var gameArea = {
         this.context = this.canvas.getContext("2d");
         this.frameCount = 0;
         this.interval = setInterval(updateGameArea, 20);
-        window.addEventListener('keydown', function (e) {
-            gameArea.keys = (gameArea.keys || []);
-            gameArea.keys[e.keyCode] = (e.type === "keydown");
-        });
-        window.addEventListener('keyup', function (e) {
-            gameArea.keys[e.keyCode] = (e.type === "keydown");
-        });
     },
     clear: function () {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -48,6 +44,7 @@ function updateGameArea() {
     gameArea.clear();
     gameArea.frameCount += 1;
     //Background
+    //Consider setting speed independently from move
     gameBackground.move(-1, 0);
     gameBackground.update();
     //Obstacles
@@ -55,26 +52,13 @@ function updateGameArea() {
         //gameObstacles.addBlockGate(20, gameArea.canvas.height, "green", gameArea.context, gameArea.canvas.width, 0);
         gameObstacles.addTileGate(gameArea.canvas.width, gameArea.canvas.height, "./images/b-tile.png", gameArea.context, gameArea.canvas.width, 0);
     }
+    //Consider setting speed independently from move
     gameObstacles.moveObstacles(-1, 0);
     gameObstacles.updateObstacles();
     //Score
     gameScore.update("SCORE: " + gameArea.frameCount);
     //Character
-    //Controlling character movement needs further attention!!!
-    var speedX=0, speedY=0;
-    if (gameArea.keys && gameArea.keys[37]) {
-        speedX = -1;
-    }
-    if (gameArea.keys && gameArea.keys[39]) {
-        speedX = 1;
-    }
-    if (gameArea.keys && gameArea.keys[38]) {
-        speedY = -1;
-    }
-    if (gameArea.keys && gameArea.keys[40]) {
-        speedY = 1;
-    }
-    gameCharacter.move(speedX, speedY);
+    gameCharacter.move();
     gameCharacter.update();
 }
 
@@ -314,15 +298,17 @@ function CharacterComponent(width, height, source, frames, x, y, ctx) {
     this.height = height;
     this.x = x;
     this.y = y;
+    this.speedX = 0;
+    this.speedY = 0;
     this.source = source;
     this.frames = frames;
     this.frame = 1;
     this.image = new Image();
     this.image.src = this.source.replace("?", this.frame);
     this.ctx = ctx;
-    this.move = function(speedX, speedY){
-        this.x += speedX;
-        this.y += speedY;
+    this.move = function(){
+        this.x += this.speedX;
+        this.y += this.speedY;
         if (this.x < 0) {
             this.x = 0;
         }
