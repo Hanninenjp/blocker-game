@@ -8,3 +8,10 @@ canvas {
 .center{
     text-align: center;
 }
+
+.bg-action-button{
+    display:block;
+    width:60px;
+    height: 30px;
+    margin: 16px auto;
+}

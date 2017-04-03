@@ -2,28 +2,54 @@
  * Created by ekoodi on 29.3.2017.
  */
 
-window.addEventListener("load", startGame);
+window.addEventListener("load", initializeGame, false);
 
 var gameCharacter;
 var gameBackground;
 var gameObstacles;
 var gameScore;
 var gameController;
+var splashScreen;
 
-function startGame() {
-    gameArea.start();
-    gameCharacter = new CharacterComponent(34, 30, "./images/c-frame-?.png", 4, 5, 120, gameArea.context);
+function initializeGame(){
+    gameArea.initialize();
+    gameArea.clear();
+    splashScreen = new Image();
+    splashScreen.src = "./images/bg-splash.png";
+    splashScreen.addEventListener("load", enableGame, false);
+}
+
+function enableGame(){
+    gameArea.context.drawImage(splashScreen, 0, 0, 480, 270);
+    var startButton = document.getElementById("bg-action-button");
+    startButton.addEventListener("click", startGame);
+}
+
+function startGame(){
+    //Start button is simply disabled and game can be restarted by reloading
+    //Consider adding support for restarting the game
+    //On the other hand, start and restart could be done by simply clicking the canvas or some canvas element
+    var startButton = document.getElementById("bg-action-button");
+    startButton.disabled = true;
+    //Following initializations could be done already in the initalizeGame()
+    //This would also potentially enable preloading some images, but generally
+    //improving the image loading would also require some changes in the existing classes
+    gameCharacter = new CharacterComponent(40, 30, "./images/c-frame-?.png", 4, 5, 120, gameArea.context);
+    //Alternatively a layered background with separate ground layer could be used
     gameBackground = new BackgroundComponent(540, 270, "./images/beach-background.png", gameArea.context);
     gameObstacles = new ObstacleGroup();
     gameScore = new TextComponent("30px", "Consolas", "black", gameArea.context, 280, 30);
     gameController = new KeyboardController(gameCharacter);
     gameController.start();
+    gameArea.start();
 }
 
 var gameArea = {
-    start: function () {
+    initialize: function(){
         this.canvas = document.getElementById("bg-canvas");
         this.context = this.canvas.getContext("2d");
+    },
+    start: function(){
         this.frameCount = 0;
         this.interval = setInterval(updateGameArea, 20);
     },
@@ -39,6 +65,9 @@ function updateGameArea() {
 
     if(gameObstacles.isCollision(gameCharacter)){
         gameArea.stop();
+        //Consider adding a play again button in the canvas, instead of just displaying game over, and a start button for initially starting the game
+        var gameOver = new TextComponent("60px", "Consolas", "black", gameArea.context, 85, 135);
+        gameOver.update("Game Over!");
         return;
     }
     gameArea.clear();
@@ -183,8 +212,8 @@ function ObstacleTileGate(width, height, source, ctx, x, y){
     this.image = new Image();
     this.image.src = this.source;
     var tileCount = 9;
-    var tileWidth = this.height / tileCount;
-    var tileHeight = this.height / tileCount;
+    var tileWidth = Math.floor(this.height / tileCount);
+    var tileHeight = Math.floor(this.height / tileCount);
     var gap = 2;
     var minTiles = 1;
     var maxTiles = 6;
@@ -194,6 +223,7 @@ function ObstacleTileGate(width, height, source, ctx, x, y){
         this.components.push(new ObstacleTileComponent(tileWidth, tileHeight, this.image, this.ctx, this.x, this.y + i * tileHeight));
     }
     for(i = 0; i < bottomTiles; i++){
+        //Alternatively, tiles could be added bottom up to avoid potential gap due to rounding
         this.components.push(new ObstacleTileComponent(tileWidth, tileHeight, this.image, this.ctx, this.x, this.y + (topTiles+gap) * tileHeight + i * tileHeight));
     }
     this.move = function(speedX){
